@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сервис оценки энергоэффективности</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <h1>Сервис оценки энергоэффективности на основе топливно-энергетических балансов региона</h1>
+    <p><a href="{{ url_for('download_template') }}">Скачать шаблон Excel файла</a></p>
+    <form action="{{ url_for('upload_files') }}" method="post" enctype="multipart/form-data">
+        <label for="files">Загрузить Excel файлы:</label>
+        <input type="file" name="files" id="files" multiple><br>
+        <input type="submit" value="Загрузить файлы">
+    </form>
+
+    {% if files %}
+    <h2>Загруженные файлы</h2>
+    <ul>
+        {% for file in files %}
+            <li>{{ file }}</li>
+        {% endfor %}
+    </ul>
+    <form id="report-form" method="post">
+        <label for="base_file">Выберите базовый файл:</label>
+        <select name="base_file" id="base_file">
+            {% for file in files %}
+                <option value="{{ file }}">{{ file }}</option>
+            {% endfor %}
+        </select><br>
+        <label for="current_file">Выберите текущий файл:</label>
+        <select name="current_file" id="current_file">
+            {% for file in files %}
+                <option value="{{ file }}">{{ file }}</option>
+            {% endfor %}
+        </select><br>
+        <button formaction="{{ url_for('display_report') }}" type="submit">Отобразить отчет</button>
+        <!--<button formaction="{{ url_for('download_report') }}" type="submit">Скачать отчет</button>-->
+    </form>
+    {% endif %}
+
+    <div id="plotly-graph"></div>
+    {% if fig_html %}
+    <div>{{ fig_html|safe }}</div>
+    {% endif %}
+</body>
+</html>

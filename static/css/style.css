@@ -1,0 +1,49 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f4f8; /* Светло-серый фон */
+    color: #333; /* Темный текст */
+    margin: 0;
+    padding: 0;
+}
+
+h1, h2 {
+    color: #2c3e50; /* Темно-синий */
+}
+
+a {
+    color: #2980b9; /* Ярко-синий */
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+form, select, input, button {
+    margin: 10px 0;
+    padding: 10px;
+    border: 1px solid #bdc3c7; /* Светло-серый */
+    border-radius: 5px;
+    background-color: #ecf0f1; /* Очень светло-серый */
+}
+
+form button {
+    background-color: #3498db; /* Ярко-синий */
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+form button:hover {
+    background-color: #2980b9;
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+ul li {
+    padding: 5px;
+    border-bottom: 1px solid #bdc3c7;
+}
