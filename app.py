@@ -779,12 +779,6 @@ def download_report():
   if not os.path.exists(base_filepath) or not os.path.exists(current_filepath):
     return "Файл не найден", 404
 
-  #report_content= analyze_excel_files_for_download(base_filepath, current_filepath)
-  #doc = Document()
-  #sec = doc.AddSection()
-  #par = sec.AddParagraph()
-  #par.AppendHTML(report_content)
-
   pdf_path = os.path.join(app.config['DOWNLOAD_FOLDER'], 'report.pdf')
   #doc.SaveToFile(pdf_path, FileFormat.PDF)
   return send_from_directory(app.config['DOWNLOAD_FOLDER'], 'report.pdf', as_attachment=True)
