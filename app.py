@@ -7,6 +7,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.io as pio
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 import numpy as np
 
 
@@ -383,23 +384,46 @@ def heatMaps(tables):
   return res
 
 def streamGraph(tables):
-  energy_sources = ["Уголь", "Сырая нефть", "Нефтепродукты", "Природный газ", "Твёрдое топливо", "Гидроэнергия", "Атомная энергия", "Электро энергия", "Тепловая энергия"]
-  energy_sources2 = ["Уголь", 'Дизель', 'Мазут', 'СУГ', 'Природный газ']
-  ppe_data = {source: [] for source in energy_sources}
+  sources = ['Расход ТЭР на производство ЭЭ', 'Расход ТЭР на производство ТЭ', 'Расход на преобразование топлива', 'Потери ЭЭ в сетях', 'Потери ТЭ в сетях', 'Потери на СП', 'Первичное потребление']
+  data = {source: [] for source in sources}
   years=[]
   for table in tables:
     year=table.iloc[0,10]
     years.append(int(year[:4]))
     table = table.iloc[2:].reset_index(drop=True)
-    for i in range(len(energy_sources)):
-      if isnan(table.iloc[6,2+i]):
-        ppe_data[energy_sources[i]].append(0)
-      else:
-        ppe_data[energy_sources[i]].append(int(table.iloc[6,2+i]))
-  ppe_data={**{'Year': years},**ppe_data}
-  df=pd.DataFrame(ppe_data)
+    if isnan(table.iloc[8,11]):
+      data['Расход ТЭР на производство ЭЭ'].append(0)
+    else:
+      data['Расход ТЭР на производство ЭЭ'].append(abs(int(table.iloc[8,11])))
+    if isnan(table.iloc[9,11]):
+      data['Расход ТЭР на производство ТЭ'].append(0)
+    else:
+      data['Расход ТЭР на производство ТЭ'].append(abs(int(table.iloc[9,11])))
+    if isnan(table.iloc[13,11]):
+      data['Расход на преобразование топлива'].append(0)
+    else:
+      data['Расход на преобразование топлива'].append(abs(int(table.iloc[13,11])))
+    if isnan(table.iloc[18,9]):
+      data['Потери ЭЭ в сетях'].append(0)
+    else:
+      data['Потери ЭЭ в сетях'].append(abs(int(table.iloc[18,9])))
+    if isnan(table.iloc[18,10]):
+      data['Потери ТЭ в сетях'].append(0)
+    else:
+      data['Потери ТЭ в сетях'].append(abs(int(table.iloc[18,10])))
+    if isnan(table.iloc[17,11]):
+      data['Потери на СП'].append(0)
+    else:
+      data['Потери на СП'].append(abs(int(table.iloc[17,11])))
+    if isnan(table.iloc[6,11]):
+      data['Первичное потребление'].append(0)
+    else:
+      data['Первичное потребление'].append(abs(int(table.iloc[6,11])))
+
+  data={**{'Year': years},**data}
+  df=pd.DataFrame(data)
   fig=go.Figure()
-  for source in energy_sources:
+  for source in sources:
     fig.add_trace(go.Scatter(
         x=df['Year'],
         y=df[source],
@@ -411,17 +435,129 @@ def streamGraph(tables):
   # Настройка графика
   fig.update_layout(
       title={
-          'text':'Динамика изменения потребления первичной энергии',
+          'text':'Динамика эффективности сектора трансформации ТЭК региона',
           'x':0.5,
           'xanchor': 'center',
           'yanchor': 'top'
         },
       xaxis_title="Годы",
-      yaxis_title="Значения",
+      yaxis_title="Значения, т.у.т.",
       legend_title="Категории",
-      template="plotly_white"
+      template="plotly_white",
+      yaxis=dict(
+          tickformat="d"  # Используем формат целого числа
+      )
   )
   return [fig]
+
+def radarDiagram(tables):
+  VRP_MO=[4206.506,4290.2613,4644.635,5196.1364,5406.0765,6809.9511,7720.8426]#2016 2017 2018 2019 2020 2021 2022
+  years=[]
+  VRP=[]
+  P1=[]
+  P2=[]
+  P3=[]
+  P4=[]
+  P5=[]
+  P6=[]
+  for d in tables:
+    year=int(d.iloc[0,10][:4])
+    years.append(year)
+    VRP.append(VRP_MO[year-2016])
+    d = d.iloc[4:].reset_index(drop=True)
+    P1.append(1/abs(round(d.iloc[4,11]/VRP_MO[year-2016],3)))
+    P2.append(abs(round(d.iloc[17,11]/d.iloc[4,11],3)))
+    P3.append(abs(round( (d.iloc[6,9]+d.iloc[8,10])/(abs(d.iloc[6,2]+d.iloc[6,3]+d.iloc[6,4]+d.iloc[6,5]+d.iloc[6,6]+d.iloc[6,7]+d.iloc[6,8]+d.iloc[6,10])+abs(d.iloc[8,2]+d.iloc[8,3]+d.iloc[8,4]+d.iloc[8,5]+d.iloc[8,6]+d.iloc[8,7]+d.iloc[8,8]+d.iloc[8,9])),3)))
+    P4.append(abs(round(d.iloc[9,10]/abs(d.iloc[9,2]+d.iloc[9,3]+d.iloc[9,4]+d.iloc[9,5]+d.iloc[9,6]+d.iloc[9,7]+d.iloc[9,8]+d.iloc[9,9]),3)))
+    P5.append(1/abs(round(d.iloc[16,9]/d.iloc[17,9],3)))
+    P6.append(1/abs(round(d.iloc[16,10]/d.iloc[17,10],3)))
+  U1=[]
+  U2=[]
+  U3=[]
+  U4=[]
+  U5=[]
+  U6=[]
+  for i in range(1,len(years)): # За базовый берем первый год (2016г)
+    U1.append(round(P1[i]/P1[0],2))
+    U2.append(round(P2[i]/P2[0],2))
+    U3.append(round(P3[i]/P3[0],2))
+    U4.append(round(P4[i]/P4[0],2))
+    U5.append(round(P5[i]/P5[0],2))
+    U6.append(round(P6[i]/P6[0],2))
+
+  years=[str(y) for y in years][1:]
+  parameters=['U1', 'U2', 'U3', 'U4', 'U5', 'U6']
+  data= {
+    'U1':U1,
+    'U2':U2,
+    'U3':U3,
+    'U4':U4,
+    'U5':U5,
+    'U6':U6,
+  }
+  # Преобразуем данные в удобный формат
+  values_by_year = list(zip(*[data[param] for param in parameters]))
+
+  # Создание фигуры
+  fig1 = go.Figure()
+
+  # Добавляем данные для каждого года
+  for i, year in enumerate(years):
+    values = values_by_year[i]
+    fig1.add_trace(go.Scatterpolar(
+        r=list(values) + [values[0]],  # Преобразуем кортеж в список и замыкаем круг
+        theta=parameters + [parameters[0]],  # Замыкаем круг
+        name=year
+    ))
+
+  # Настройка графика
+  fig1.update_layout(
+    polar=dict(
+      radialaxis=dict(
+          visible=True,
+          range=[0, max(max(values_by_year)) + 0.5]  # Диапазон значений оси
+      )
+    ),
+    title={
+      'text':'Радарная диаграмма параметров по годам, 2016 год базовый',
+      'x':0.5,
+      'xanchor': 'center',
+      'yanchor': 'top'
+    },
+    showlegend=True
+  )
+
+  # Создаем субплоты
+  fig2 = make_subplots(
+    rows=2, cols=3,  # Сетка 2x3
+    specs=[[{'type': 'polar'}] * 3, [{'type': 'polar'}] * 3],  # Все графики полярные
+    subplot_titles=years  # Названия графиков — годы
+  )
+
+  # Добавляем данные для каждого года
+  for i, year in enumerate(years):
+      values = values_by_year[i]
+      row = i // 3 + 1  # Рассчитываем строку (целая часть от деления)
+      col = i % 3 + 1   # Рассчитываем колонку (остаток от деления)
+      fig2.add_trace(go.Scatterpolar(
+          r=list(values) + [values[0]],  # Замыкаем круг
+          theta=parameters + [parameters[0]],  # Замыкаем круг
+          fill='toself',  # Закрашиваем область
+          name=f"Year {year}",
+          showlegend=False
+      ), row=row, col=col)
+
+  # Настройка графика
+  fig2.update_layout(
+      title={
+      'text':'Радарные диаграммы по годам, 2016 год базовый',
+      'x':0.5,
+      'xanchor': 'center',
+      'yanchor': 'top'
+      },
+      height=800,  # Высота всего графика
+  )
+  return[fig1,fig2]
 
 def energyEfficiency(baseTable,currentTable):
   d=baseTable
@@ -460,7 +596,8 @@ def energyEfficiency(baseTable,currentTable):
   for i in range(6):
     u.append(round(p[i]/b_p[i], 2))
   # уровень значимости показателей
-  r = [0.17, 0.17, 0.17, 0.17, 0.16, 0.16]
+  #r = [0.17, 0.17, 0.17, 0.17, 0.16, 0.16]
+  r = [0.2, 0.2, 0.1, 0.2, 0.1, 0.2]
   # узловые точки в классификаторе
   g = [0.1, 0.3, 0.5, 0.7, 0.9]
   # Классификация отдельных значений
@@ -488,7 +625,7 @@ def energyEfficiency(baseTable,currentTable):
         lvlX[i][b[1]] = round(1 - lvlX[i][b[0]],2)
     elif len(b) == 1:
       lvlX[i][b[0]] = 1
-    elif len(b) == 0 and u[i] > 1.4:
+    elif len(b) == 0:
       lvlX[i][4] = 1
   # считаем Динамику изменения энергопотребления в регионе
   D = 0  
@@ -519,8 +656,9 @@ def energyEfficiency(baseTable,currentTable):
       lvlD[b[1]] = round(1 - lvlD[b[0]],2)
   elif len(b) == 1:
     lvlD[b[0]] = 1
-  elif len(b) == 0 and u[i] > 1:
+  elif len(b) == 0 :
     lvlD[4] = 1
+
   return lvlD, D, lvlX
 
 def prepare_data_for_display(lvlD, D, lvlX):
@@ -575,32 +713,6 @@ def prepare_data_for_display(lvlD, D, lvlX):
       """
     report_text += "</table>"
     return report_text
-
-def analyze_results(tables):
-  data = {
-    'Год': [],
-    'P1': [],
-    'P2': [],
-    'P3': [],
-    'P4': [],
-    'P5': [],
-    'P6': [],
-  }
-  for d in tables:
-    year=d.iloc[0,10]
-    yearInt=int(year[:4])
-    d = d.iloc[4:].reset_index(drop=True)
-    data['Год'].append(yearInt)
-    data['P1'].append(abs(round(d.iloc[4,11]/VRP_MO[yearInt-2016],3)))
-    data['P2'].append(abs(round(d.iloc[17,11]/d.iloc[4,11],3)))
-    data['P3'].append(abs(round((d.iloc[6,9]+d.iloc[8,10])/(abs(d.iloc[6,2]+d.iloc[6,3]+d.iloc[6,4]+d.iloc[6,5]+d.iloc[6,6]+d.iloc[6,7]+d.iloc[6,8]+d.iloc[6,10])+abs(d.iloc[8,2]+d.iloc[8,3]+d.iloc[8,4]+d.iloc[8,5]+d.iloc[8,6]+d.iloc[8,7]+d.iloc[8,8]+d.iloc[8,9])),3)))
-    data['P4'].append(abs(round(d.iloc[9,10]/abs(d.iloc[9,2]+d.iloc[9,3]+d.iloc[9,4]+d.iloc[9,5]+d.iloc[9,6]+d.iloc[9,7]+d.iloc[9,8]+d.iloc[9,9]),3)))
-    data['P5'].append(abs(round(d.iloc[16,9]/d.iloc[17,9],3)))
-    data['P6'].append(abs(round(d.iloc[16,10]/d.iloc[17,10],3)))
-  data=pd.DataFrame(data)  
-  correlation_matrix = data.iloc[:, 1:].corr() # Берем только столбцы P1–P6
-  # Вычисление собственных значений и векторов
-  eigenvalues, eigenvectors = np.linalg.eig(correlation_matrix)
 
 def allowed_file(filename):
   return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
@@ -693,52 +805,14 @@ def analyze_excel_files(base_filepath, current_filepath):
   figHeatMapsGeneral = heatMapsGeneral(tables)
   figHeatMaps = heatMaps(tables)
   figStream = streamGraph(tables)
+  figRadar = radarDiagram(tables)
   lvlD, D, lvlX =energyEfficiency(baseTable, currentTable)
   report_text = prepare_data_for_display(lvlD,D,lvlX)
-  figs = figSankey+figSankey2+figPar+figHeatMapsGeneral+figHeatMaps+figStream+figPiePPE+figPieKP+figBar
+  figs = figSankey+figSankey2+figPar+figHeatMapsGeneral+figHeatMaps+figStream+figRadar+figPiePPE+figPieKP+figBar
   fig_html = ''.join([pio.to_html(fig, full_html=False) for fig in figs])
   # Объединяем отчет и графики
   full_content = f"<div>{report_text}</div>{fig_html}"
   return full_content
-
-# def analyze_excel_files_for_download(base_filepath, current_filepath):
-#     # Чтение всех файлов в папке
-#     files = os.listdir(app.config['UPLOAD_FOLDER'])
-#     tables = [pd.read_excel(os.path.join(app.config['UPLOAD_FOLDER'], f), header=None) for f in files if allowed_file(f)] 
-#     baseTable = pd.read_excel(base_filepath, header=None)
-#     currentTable = pd.read_excel(current_filepath, header=None)
-
-#     # Генерация графиков и сохранение их как изображения
-#     figSankey = [sankey(tables[t]).write_image(os.path.join(app.config['UPLOAD_FOLDER'], 'sankey'+str(t+1)+'.png')) for t in range(len(tables))]
-#     figSankey2 = [sankey2(tables[t]).write_image(os.path.join(app.config['UPLOAD_FOLDER'], 'sankey2_'+str(t+1)+'.png')) for t in range(len(tables))]
-#     figPiePPE = [piePPE(tables[t]).write_image(os.path.join(app.config['UPLOAD_FOLDER'], 'piePPE_'+str(t+1)+'.png')) for t in range(len(tables))]
-#     figPieKP = [pieKP(tables[t]).write_image(os.path.join(app.config['UPLOAD_FOLDER'], 'pieKP_'+str(t+1)+'.png')) for t in range(len(tables))]
-#     figBar = barChart(tables).write_image(os.path.join(app.config['UPLOAD_FOLDER'], 'barChart.png'))
-#     figPar = parcoordsChart(tables).write_image(os.path.join(app.config['UPLOAD_FOLDER'], 'parcoordsChart.png'))
-#     figHeatMapsGeneral = heatMapsGeneral(tables).write_image(os.path.join(app.config['UPLOAD_FOLDER'], 'heatMapsGeneral.png'))
-#     figHeatMaps = heatMaps(tables).write_image(os.path.join(app.config['UPLOAD_FOLDER'], 'heatMaps.png'))
-
-#     # Генерация текста отчета
-#     report_text = energyEfficiency(baseTable, currentTable)
-    
-#     # Генерация HTML контента с графиками
-#     fig_html = ''
-#     for t in range(len(tables)):
-#         fig_html += f'<h3>Sankey Chart {t+1}</h3><img src="/static/sankey{t+1}.png" alt="Sankey {t+1}" />'
-#         fig_html += f'<h3>Sankey2 Chart {t+1}</h3><img src="/static/sankey2_{t+1}.png" alt="Sankey2 {t+1}" />'
-#         fig_html += f'<h3>PiePPE Chart {t+1}</h3><img src="/static/piePPE_{t+1}.png" alt="PiePPE {t+1}" />'
-#         fig_html += f'<h3>PieKP Chart {t+1}</h3><img src="/static/pieKP_{t+1}.png" alt="PieKP {t+1}" />'
-
-#     # Встраиваем графики и текст в HTML
-#     full_content = f"<div>{report_text}</div>{fig_html}"
-#     return full_content
-# def create_report(content):
-#   document = Document()
-#   document.add_heading('Отчет по энергоэффективности', 0)
-#   document.add_paragraph(content)
-#   report_path = 'report.docx'
-#   document.save(os.path.join(app.config['DOWNLOAD_FOLDER'], report_path))
-#   return report_path
 
 if __name__ == '__main__':
   app.run(debug=True)
