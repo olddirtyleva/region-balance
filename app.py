@@ -761,7 +761,7 @@ def display_report():
   if not os.path.exists(base_filepath) or not os.path.exists(current_filepath):
     return "Файл не найден", 404
 
-  fig_html = analyze_excel_files(base_file, current_file)
+  fig_html = analyze_excel_files(base_filepath, current_filepath)
 
   return render_template('index.html', files=os.listdir(app.config['UPLOAD_FOLDER']), fig_html=fig_html)
 
@@ -808,5 +808,22 @@ def analyze_excel_files(base_filepath, current_filepath):
   full_content = f"<div>{report_text}</div>{fig_html}"
   return full_content
 
+# Функция для очистки папки uploads
+def clear_upload_folder():
+  folder = app.config['UPLOAD_FOLDER']
+  if os.path.exists(folder):
+    for filename in os.listdir(folder):
+      file_path = os.path.join(folder, filename)
+      try:
+        if os.path.isfile(file_path) or os.path.islink(file_path):
+          os.unlink(file_path)  # Удаляем файл или ссылку
+        elif os.path.isdir(file_path):
+          shutil.rmtree(file_path)  # Удаляем папку и её содержимое
+      except Exception as e:
+        print(f"Не удалось удалить {file_path}. Причина: {e}")
+
 if __name__ == '__main__':
-  app.run(debug=True)
+  clear_upload_folder()  # Очистка папки перед запуском
+  from waitress import serve
+  serve(app, host="0.0.0.0", port=8080)
+  # app.run(debug=True)
