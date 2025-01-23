@@ -8,7 +8,7 @@ import plotly.io as pio
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
-
+import shutil
 
 app = Flask(__name__, static_folder='static')
 os.chdir(os.path.dirname(__file__))
