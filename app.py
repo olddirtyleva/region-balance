@@ -9,6 +9,7 @@ import plotly.io as pio
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
+import shutil
 
 
 app = Flask(__name__, static_folder='static')
@@ -384,7 +385,7 @@ def heatMaps(tables):
   return res
 
 def streamGraph(tables):
-  sources = ['Расход ТЭР на производство ЭЭ', 'Расход ТЭР на производство ТЭ', 'Расход на преобразование топлива', 'Потери ЭЭ в сетях', 'Потери ТЭ в сетях', 'Потери на СП', 'Первичное потребление']
+  sources = ['Расход ТЭР на производство ЭЭ', 'Расход ТЭР на производство ТЭ', 'Расход на преобразование топлива', 'Потери ЭЭ в сетях', 'Потери ТЭ в сетях', 'Потери на СП']
   data = {source: [] for source in sources}
   years=[]
   for table in tables:
@@ -415,10 +416,6 @@ def streamGraph(tables):
       data['Потери на СП'].append(0)
     else:
       data['Потери на СП'].append(abs(int(table.iloc[17,11])))
-    if isnan(table.iloc[6,11]):
-      data['Первичное потребление'].append(0)
-    else:
-      data['Первичное потребление'].append(abs(int(table.iloc[6,11])))
 
   data={**{'Year': years},**data}
   df=pd.DataFrame(data)
@@ -821,7 +818,6 @@ def clear_upload_folder():
           shutil.rmtree(file_path)  # Удаляем папку и её содержимое
       except Exception as e:
         print(f"Не удалось удалить {file_path}. Причина: {e}")
-
 if __name__ == '__main__':
   clear_upload_folder()  # Очистка папки перед запуском
   from waitress import serve
