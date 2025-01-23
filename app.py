@@ -758,7 +758,7 @@ def display_report():
   if not os.path.exists(base_filepath) or not os.path.exists(current_filepath):
     return "Файл не найден", 404
 
-  fig_html = analyze_excel_files(base_file, current_file)
+  fig_html = analyze_excel_files(base_filepath, current_filepath)
 
   return render_template('index.html', files=os.listdir(app.config['UPLOAD_FOLDER']), fig_html=fig_html)
 
