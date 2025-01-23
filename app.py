@@ -748,22 +748,25 @@ def upload_files():
 
 @app.route('/display-report', methods=['POST'])
 def display_report():
-  base_file = request.form.get('base_file')
-  current_file = request.form.get('current_file')
+  try:
+    base_file = request.form.get('base_file')
+    current_file = request.form.get('current_file')
 
-  if not base_file or not current_file:
-    return redirect(url_for('index'))
+    if not base_file or not current_file:
+      return redirect(url_for('index'))
 
-  base_filepath = os.path.join(app.config['UPLOAD_FOLDER'], base_file)
-  current_filepath = os.path.join(app.config['UPLOAD_FOLDER'], current_file)
+    base_filepath = os.path.join(app.config['UPLOAD_FOLDER'], base_file)
+    current_filepath = os.path.join(app.config['UPLOAD_FOLDER'], current_file)
 
-  if not os.path.exists(base_filepath) or not os.path.exists(current_filepath):
-    return "Файл не найден", 404
+    if not os.path.exists(base_filepath) or not os.path.exists(current_filepath):
+      return "Файл не найден", 404
 
-  fig_html = analyze_excel_files(base_filepath, current_filepath)
+    fig_html = analyze_excel_files(base_filepath, current_filepath)
 
-  return render_template('index.html', files=os.listdir(app.config['UPLOAD_FOLDER']), fig_html=fig_html)
-
+    return render_template('index.html', files=os.listdir(app.config['UPLOAD_FOLDER']), fig_html=fig_html)
+  except Exception as e:
+    app.logger.error(f"Error in /display-report: {str(e)}")
+    return "Internal Server Error", 500
 @app.route('/download-report', methods=['POST'])
 def download_report():
   base_file = request.form.get('base_file')
