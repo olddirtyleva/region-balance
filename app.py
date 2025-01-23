@@ -9,7 +9,7 @@ import plotly.io as pio
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
-
+import shutil
 
 app = Flask(__name__, static_folder='static')
 os.chdir(os.path.dirname(__file__))
@@ -749,21 +749,25 @@ def upload_files():
 
 @app.route('/display-report', methods=['POST'])
 def display_report():
-  base_file = request.form.get('base_file')
-  current_file = request.form.get('current_file')
+  try:
+    base_file = request.form.get('base_file')
+    current_file = request.form.get('current_file')
 
-  if not base_file or not current_file:
-    return redirect(url_for('index'))
+    if not base_file or not current_file:
+      return redirect(url_for('index'))
 
-  base_filepath = os.path.join(app.config['UPLOAD_FOLDER'], base_file)
-  current_filepath = os.path.join(app.config['UPLOAD_FOLDER'], current_file)
+    base_filepath = os.path.join(app.config['UPLOAD_FOLDER'], base_file)
+    current_filepath = os.path.join(app.config['UPLOAD_FOLDER'], current_file)
 
-  if not os.path.exists(base_filepath) or not os.path.exists(current_filepath):
-    return "Файл не найден", 404
+    if not os.path.exists(base_filepath) or not os.path.exists(current_filepath):
+      return "Файл не найден", 404
 
-  fig_html = analyze_excel_files(base_file, current_file)
+    fig_html = analyze_excel_files(base_filepath, current_filepath)
 
-  return render_template('index.html', files=os.listdir(app.config['UPLOAD_FOLDER']), fig_html=fig_html)
+    return render_template('index.html', files=os.listdir(app.config['UPLOAD_FOLDER']), fig_html=fig_html)
+  except Exception as e:
+      app.logger.error(f"Error in /display-report: {str(e)}")
+      return "Internal Server Error", 500
 
 @app.route('/download-report', methods=['POST'])
 def download_report():
@@ -808,5 +812,22 @@ def analyze_excel_files(base_filepath, current_filepath):
   full_content = f"<div>{report_text}</div>{fig_html}"
   return full_content
 
+# Функция для очистки папки uploads
+def clear_upload_folder():
+  folder = app.config['UPLOAD_FOLDER']
+  if os.path.exists(folder):
+    for filename in os.listdir(folder):
+      file_path = os.path.join(folder, filename)
+      try:
+        if os.path.isfile(file_path) or os.path.islink(file_path):
+          os.unlink(file_path)  # Удаляем файл или ссылку
+        elif os.path.isdir(file_path):
+          shutil.rmtree(file_path)  # Удаляем папку и её содержимое
+      except Exception as e:
+        print(f"Не удалось удалить {file_path}. Причина: {e}")
+
 if __name__ == '__main__':
-  app.run(debug=True)
+  clear_upload_folder()  # Очистка папки перед запуском
+  from waitress import serve
+  serve(app, host="0.0.0.0", port=8080)
+  # app.run(debug=True)
