@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_from_directory, redirect, url_for
+from flask import Flask, render_template, request, send_from_directory, redirect, url_for, jsonify
 from werkzeug.utils import secure_filename
 from math import *
 import os
@@ -746,6 +746,12 @@ def upload_files():
 
   return redirect(url_for('index'))
 
+@app.route('/delete_files')
+def delete_files():
+  clear_upload_folder()
+  return redirect(url_for('index'))
+  #return jsonify(success=True)  # Возвращаем успешный ответ
+  
 @app.route('/display-report', methods=['POST'])
 def display_report():
   try:
@@ -767,6 +773,8 @@ def display_report():
   except Exception as e:
     app.logger.error(f"Error in /display-report: {str(e)}")
     return "Internal Server Error", 500
+  
+
 @app.route('/download-report', methods=['POST'])
 def download_report():
   base_file = request.form.get('base_file')
@@ -826,6 +834,9 @@ def clear_upload_folder():
 
 if __name__ == '__main__':
   clear_upload_folder()  # Очистка папки перед запуском
-  from waitress import serve
-  serve(app, host="0.0.0.0", port=8080)
-  # app.run(debug=True)
+  # from waitress import serve
+  # serve(app, host="0.0.0.0", port=8080)
+  app.run(debug=True)
+
+
+#<button formaction="{{ url_for('delete_files') }}" type="submit">Очистить файлы</button>

@@ -15,13 +15,16 @@
         <input type="file" name="files" id="files" multiple><br>
         <input type="submit" value="Загрузить файлы">
     </form>
-
+            
     {% if files %}
     <h2>Загруженные файлы</h2>
     <ul>
         {% for file in files %}
             <li>{{ file }}</li>
         {% endfor %}
+        <form id="delete_files" method="get">
+            <button formaction="{{ url_for('delete_files') }}" type="submit">Очистить файлы</button>
+        </form>
     </ul>
     <form id="report-form" method="post">
         <label for="base_file">Выберите базовый файл:</label>
@@ -37,7 +40,7 @@
             {% endfor %}
         </select><br>
         <button formaction="{{ url_for('display_report') }}" type="submit">Отобразить отчет</button>
-        <!--<button formaction="{{ url_for('download_report') }}" type="submit">Скачать отчет</button>-->
+        
     </form>
     {% endif %}
 
