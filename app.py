@@ -750,7 +750,6 @@ def upload_files():
 def delete_files():
   clear_upload_folder()
   return redirect(url_for('index'))
-  #return jsonify(success=True)  # Возвращаем успешный ответ
   
 @app.route('/display-report', methods=['POST'])
 def display_report():
