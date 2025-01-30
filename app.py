@@ -746,6 +746,11 @@ def upload_files():
 
   return redirect(url_for('index'))
 
+@app.route('/delete_files')
+def delete_files():
+  clear_upload_folder()
+  return redirect(url_for('index'))
+
 @app.route('/display-report', methods=['POST'])
 def display_report():
   try:

@@ -22,6 +22,9 @@
         {% for file in files %}
             <li>{{ file }}</li>
         {% endfor %}
+        <form id="delete_files" method="get">
+            <button formaction="{{ url_for('delete_files') }}" type="submit">Очистить файлы</button>
+        </form>
     </ul>
     <form id="report-form" method="post">
         <label for="base_file">Выберите базовый файл:</label>
