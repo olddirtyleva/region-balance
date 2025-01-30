@@ -383,7 +383,7 @@ def heatMaps(tables):
   return res
 
 def streamGraph(tables):
-  sources = ['Расход ТЭР на производство ЭЭ', 'Расход ТЭР на производство ТЭ', 'Расход на преобразование топлива', 'Потери ЭЭ в сетях', 'Потери ТЭ в сетях', 'Потери на СП', 'Первичное потребление']
+  sources = ['Расход ТЭР на производство ЭЭ', 'Расход ТЭР на производство ТЭ', 'Расход на преобразование топлива', 'Потери ЭЭ в сетях', 'Потери ТЭ в сетях', 'Потери на СП']
   data = {source: [] for source in sources}
   years=[]
   for table in tables:
@@ -414,10 +414,6 @@ def streamGraph(tables):
       data['Потери на СП'].append(0)
     else:
       data['Потери на СП'].append(abs(int(table.iloc[17,11])))
-    if isnan(table.iloc[6,11]):
-      data['Первичное потребление'].append(0)
-    else:
-      data['Первичное потребление'].append(abs(int(table.iloc[6,11])))
 
   data={**{'Year': years},**data}
   df=pd.DataFrame(data)
